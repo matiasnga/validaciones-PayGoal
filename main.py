@@ -54,9 +54,9 @@ else:
     print(sum_900_resumen)
     print(sum_900_txt)
 
-for linea in range(len(txt_900)):
+resultado_list = list()
 
-    # linea = 1951
+for linea in range(len(txt_900)):
 
     a2_cuit = txt_900.at[linea, 0]
     x2_dia = txt_900.at[linea, 2][:2]
@@ -76,4 +76,18 @@ for linea in range(len(txt_900)):
 
     if round(resultado, 2) != i2_retencion:
         to_print = round(resultado - i2_retencion, 2)
-        print(str(a2_cuit) + " - " + str(to_print) + " - " + str(i2_retencion))
+        resultado_list.append(str(a2_cuit) + " - " + str(to_print) + " - " + str(i2_retencion))
+print(resultado)
+print("----------")
+resultado_list.sort()
+i = 0
+
+for resultado in resultado_list:
+    shop_id = resultado[i][0]  # Get the current ShopId
+    print(shop_id)
+    cond1 = (detalle['ShopId'] == shop_id)
+    print(detalle[cond1])
+    tax_conditions = detalle[cond1].loc['TaxCondition3'].tolist()
+    i += 1
+    print(resultado, tax_conditions)
+
