@@ -2,12 +2,12 @@ import pandas as pd
 from tqdm import tqdm
 import file_utils
 
-resumen = file_utils.open_csv_file("2023-09 1 - resumen")
-print("Archivo resumen abierto correctamente")
-detalle = file_utils.open_csv_file("2023-09 1 - detalle")
-print("Archivo detalle abierto correctamente")
-txt_900 = file_utils.open_txt_file("900 - 2023-09 1")
-print("Archivo ddjj 900 abierto correctamente")
+file_utils.unzip_file("csv.zip")
+file_utils.unzip_file('ddjj.zip')
+
+resumen = file_utils.open_csv_file("2023-09 1 - resumen.csv")
+detalle = file_utils.open_csv_file("2023-09 1 - detalle.csv")
+txt_900 = file_utils.open_txt_file("900 - 2023-09 1.txt")
 
 sum_900_resumen = resumen.loc[resumen['TaxId'] == 900, 'Total']
 sum_900_detalle = detalle[(detalle['VoidDate'].isnull())]['TaxCollectionAmount3'].sum()
@@ -31,7 +31,7 @@ column_types = {'ShopId': int, 'TaxCondition': str, 'Diferencia': float, 'Certif
 
 # Aplica los tipos de datos a las columnas correspondientes
 df_resultados = df_resultados.astype(column_types)
-
+print(txt_900)
 
 for linea in tqdm(range(len(txt_900)), desc="Procesando líneas"):
     a2_cuit = txt_900.at[linea, 0]
