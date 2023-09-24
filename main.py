@@ -1,7 +1,7 @@
+import zipfile
+from zipfile import ZipFile
 import pandas as pd
-
-pd.set_option('display.max_columns', 25)  # Mostrar todas las columnas
-pd.set_option('display.max_colwidth', 10)  # No truncar el contenido de las celdas
+from tqdm import tqdm
 
 
 def string_to_float(string, i, archivo):
@@ -23,6 +23,22 @@ def open_txt_file(archivo):
 
     return pd.DataFrame(data)
 
+
+archivo_zip = "input/ddjj.zip"
+
+# Especifica la carpeta de destino donde se extraerán los archivos
+carpeta_destino = "input/ddjj"
+
+with ZipFile(archivo_zip, 'r') as archivo_zip:
+    # Obtiene una lista de los nombres de los archivos en el ZIP
+    archivos = archivo_zip.namelist()
+
+    # Utiliza tqdm para crear una barra de progreso
+    for archivo in tqdm(archivos, desc="Descomprimiendo"):
+        # Extrae el archivo actual en la carpeta de destino
+        archivo_zip.extract(archivo, carpeta_destino)
+
+print(f"Archivos descomprimidos en: {carpeta_destino}")
 
 resumen = open_csv_file("2023-09 1 - resumen")
 print("Archivo resumen abierto correctamente")
@@ -54,10 +70,7 @@ else:
     print(sum_900_resumen)
     print(sum_900_txt)
 
-for linea in range(len(txt_900)):
-
-    # linea = 1951
-
+for linea in tqdm(range(len(txt_900)), desc="Procesando líneas"):
     a2_cuit = txt_900.at[linea, 0]
     x2_dia = txt_900.at[linea, 2][:2]
     c2_date = txt_900.at[linea, 2]
@@ -67,13 +80,26 @@ for linea in range(len(txt_900)):
 
     cond1 = (detalle['ShopId'] == a2_cuit)
     cond2 = (pd.isna(detalle['VoidDate']))
-    # cond3 = ((x2_dia == 15) & (detalle['Date'] < c2_date + 1)) | ((x2_dia != 15) & (detalle['Date'] >= pd.to_datetime(c2_date).replace(day=16)))
+    # cond3 = ((x2_dia == 15) & (detalle['Date'] < c2_date + 1)) | ((x2_dia != 15) & (detalle['Date'] >=
+    # pd.to_datetime(c2_date).replace(day=16)))
     cond4 = (detalle['TaxCollectionNo3'] == y2_cert_number)
     cond5 = (detalle['TurnoverTax'] == l2_jurisdiccion)
 
-    # # Aplicar condiciones y sumar la columna AH
-    resultado = detalle[cond1 & cond2 & cond4 & cond5]['TaxCollectionAmount3'].str.replace(',', '.').astype(float).sum()
+    # Filtrar el DataFrame con las condiciones y crear una copia independiente
+    filtrado = detalle[cond1 & cond2 & cond4 & cond5].copy()
+
+    # Reemplazar comas por puntos en la columna 'TaxCollectionAmount3' y convertir a float
+    filtrado['TaxCollectionAmount3'] = filtrado['TaxCollectionAmount3'].str.replace(',', '.').astype(float)
+
+    # Calcular la suma de la columna 'TaxCollectionAmount3'
+    resultado = filtrado['TaxCollectionAmount3'].sum()
 
     if round(resultado, 2) != i2_retencion:
-        to_print = round(resultado - i2_retencion, 2)
-        print(str(a2_cuit) + " - " + str(to_print) + " - " + str(i2_retencion))
+        tax_condition = detalle[cond1 & cond2 & cond4 & cond5]['TaxCondition3'].iloc[0]
+        shop_id = detalle[cond1 & cond2 & cond4 & cond5]['ShopId'].iloc[0]
+        print(str(shop_id))
+        print(str(tax_condition))
+        to_print = "dif:" + str(round(resultado - i2_retencion, 2)), "cert: " + str(y2_cert_number), "total: " + str(
+            round(resultado, 2))
+        print(str(a2_cuit) + " - " + str(to_print))
+        print('------------------')
