@@ -12,7 +12,7 @@ def unzip_file(name):
         archivos = archivo_zip.namelist()
 
         # Utiliza tqdm para crear una barra de progreso
-        for archivo in tqdm(archivos, desc="Descomprimiendo"):
+        for archivo in tqdm(archivos, desc="Descomprimiendo " + name):
             # Extrae el archivo actual en la carpeta de destino
             archivo_zip.extract(archivo, carpeta_input)
 
