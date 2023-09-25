@@ -26,9 +26,19 @@ def open_csv_file(name):
     return pd.DataFrame(data)
 
 
-def open_txt_file(name):
+def open_900_txt_file(name):
     file = carpeta_input + name
     data = pd.read_csv(file, header=None, sep=';', decimal=',')
     data[8] = data[8].str.lstrip('0').astype(float)
     print(f"Archivo abierto correctamente: -> {file}")
+    data.columns = ['CUIT', 'CRC', 'FechaLiq', 'FechaRet', 'NroLiq', 'CantOperaciones', 'Base', 'Alicuota', 'Retencion', 'TipoRegistro', 'OpeEx', 'Jurisdiccion']
+    return pd.DataFrame(data)
+
+
+def open_921_txt_file(name):
+    file = carpeta_input + name
+    data = pd.read_csv(file, header=None, sep=',', decimal='.')
+    data[7] = data[7].astype(float)
+    print(f"Archivo abierto correctamente: -> {file}")
+    data.columns = ['Renglon', 'TipoComprobante', 'LetraComprobante', 'NroLiq', 'CUIT', 'FechaRet', 'Base', 'Alicuota', 'Retencion', 'Regimen', 'Jurisdiccion']
     return pd.DataFrame(data)
