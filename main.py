@@ -1,21 +1,20 @@
-import pandas as pd
 import file_utils
-import validation_900
-from config import cliente, periodo, path
+import validation
 
-pd.set_option('display.max_colwidth', None)
-pd.set_option('display.expand_frame_repr', False)
+# extract_date = file_utils.DateExtractor().extract_day('18/03/2204')
+#
+# print(extract_date)
+periodo = '2023101'
+cuit_agente = 'PLAY DIGITAL SA'
 
 
-detalle = file_utils.open_csv_file('2023-10 2 - detalle.csv')
-detalle = detalle.query('VoidDate.isnull()')
+detalle = file_utils.open_detalle_csv(cuit_agente, periodo)
 
-resumen = file_utils.open_csv_file("2023-10 2 - resumen.csv")
+resumen = file_utils.open_resumen_csv(cuit_agente, periodo)
 
-# txt_900_1 = file_utils.open_900_txt_file("900 - 2023-10 1.txt")
-txt_900_2 = file_utils.open_900_txt_file("900 - 2023-10 2.txt")
 
 primera_quincena, segunda_quincena = file_utils.split_detalle_quincena(detalle)
 
 
-validation_900.validation_900(txt_900_2, detalle, resumen)
+validation.validation_900(detalle, resumen, cuit_agente, periodo)
+validation.validation_900(detalle, resumen, cuit_agente, periodo)

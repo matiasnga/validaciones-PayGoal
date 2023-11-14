@@ -1,15 +1,24 @@
-from zipfile import ZipFile
 import pandas as pd
-from tqdm import tqdm
-from config import path
 
 
-# Especifica la carpeta de destino donde se extraerán los archivos
+class DateExtractor:
+    def extract_day(self, date_string):
+        return pd.to_datetime(date_string, format='%d/%m/%Y').day
 
 
-def open_csv_file(name):
-    file = path + name
+def open_detalle_csv(cuit_agente, periodo):
+    periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
+    file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} - detalle.csv"
+    data = pd.read_csv(file, sep=';', decimal=',').query('VoidDate.isnull()')
+    return pd.DataFrame(data)
+
+
+def open_resumen_csv(cuit_agente, periodo):
+    periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
+    file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} - resumen.csv"
     data = pd.read_csv(file, sep=';', decimal=',')
+    print(data)
+
     return pd.DataFrame(data)
 
 
@@ -25,20 +34,9 @@ def split_detalle_quincena(detalle):
 
     # Filtra el DataFrame para la primera quincena
     primera_quincena = detalle_filtrado[detalle_filtrado['Date'] <= fecha_intermedia.date()]
-    print(primera_quincena)
     # Filtra el DataFrame para la segunda quincena
     segunda_quincena = detalle_filtrado[detalle_filtrado['Date'] > fecha_intermedia.date()]
-    print(segunda_quincena)
     return primera_quincena, segunda_quincena
-
-
-def open_900_txt_file(name):
-    file = path + name
-    data = pd.read_csv(file, header=None, sep=';', decimal=',')
-    data[8] = data[8].str.lstrip('0').astype(float)
-    data.columns = ['CUIT', 'CRC', 'FechaLiq', 'FechaRet', 'NroLiq', 'CantOperaciones', 'Base', 'Alicuota', 'Retencion',
-                    'TipoRegistro', 'OpeEx', 'Jurisdiccion']
-    return pd.DataFrame(data)
 
 
 def open_921_txt_file(name):
