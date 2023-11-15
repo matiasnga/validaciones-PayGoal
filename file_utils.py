@@ -3,14 +3,19 @@ import pandas as pd
 
 class DateExtractor:
     def extract_day(self, date_string):
-        return pd.to_datetime(date_string, format='%d/%m/%Y').day
+        return pd.to_datetime(date_string, format='%d/%m/%Y')
 
 
 def open_detalle_csv(cuit_agente, periodo):
     periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
     file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} - detalle.csv"
-    data = pd.read_csv(file, sep=';', decimal=',').query('VoidDate.isnull()')
-    return pd.DataFrame(data)
+
+    df = pd.read_csv(file, sep=';', decimal=',').query('VoidDate.isnull()')
+    df['Date'] = pd.to_datetime(df['Date']).dt.date
+    print(df['Date'].head())
+
+    # Extraer solo la parte de la fecha
+    return pd.DataFrame(df)
 
 
 def open_resumen_csv(cuit_agente, periodo):
@@ -39,11 +44,3 @@ def split_detalle_quincena(detalle):
     return primera_quincena, segunda_quincena
 
 
-def open_921_txt_file(name):
-    file = path + name
-    data = pd.read_csv(file, header=None, sep=',', decimal='.')
-    data[7] = data[7].astype(float)
-    print(f"Archivo abierto correctamente: -> {file}")
-    data.columns = ['Renglon', 'TipoComprobante', 'LetraComprobante', 'NroLiq', 'CUIT', 'FechaRet', 'Base', 'Alicuota',
-                    'Retencion', 'Regimen', 'Jurisdiccion']
-    return pd.DataFrame(data)
