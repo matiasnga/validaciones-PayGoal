@@ -101,6 +101,7 @@ def open_900_txt_file(cuit_agente, periodo):
     data.columns = ['CUIT', 'CRC', 'FechaLiq', 'FechaRet', 'NroLiq', 'CantOperaciones', 'Base', 'Alicuota',
                     'Retencion',
                     'TipoRegistro', 'OpeEx', 'Jurisdiccion']
+
     data['FechaLiq'] = pd.to_datetime(data['FechaLiq']).dt.date
     data['FechaRet'] = pd.to_datetime(data['FechaRet']).dt.date
 

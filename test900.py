@@ -9,21 +9,28 @@ pd.set_option('display.max_colwidth', None)
 pd.set_option('display.expand_frame_repr', False)
 
 
-def calcular_sumifs(row, detalle_df):
-    cuit = row['CUIT']
-    fecha_ret = row['FechaRet']
-    dia_cert = fecha_ret.day
-    cert = int(str(row['NroLiq'])[-8:])
+def calcular_sumifs(row, detalle):
+    cuit = row['CUIT']  # Asumiendo que A1326 está en la fila 1326 (índice 1325)
+    C1 = row['FechaLiq']
+    L1 = row['Jurisdiccion']
+    Y1 = int(str(row['NroLiq'])[-8:])
+    X1 = C1.day
 
-    cond1 = detalle_df['ShopId'] == cuit
-    cond2 = detalle_df['TaxId3'] == row['Jurisdiccion']
+    cond1 = detalle['ShopId'] == cuit
 
-    if dia_cert == 15:
-        inicio_mes = datetime(fecha_ret.year, fecha_ret.month, 1).date()
-        cond3 = (detalle_df['Date'] >= inicio_mes) & (detalle_df['Date'] < fecha_ret + pd.Timedelta(days=1))
-        cond4 = detalle_df['TaxCollectionType'] == 'RET'
-        suma = detalle_df[cond1 & cond2 & cond3 & cond4]['TaxCollectionAmount3'].sum()
-        return 'u', round(suma, 2), round(row['Retencion'] - suma, 2), dia_cert, cert
+    if X1 == 15:
+        fecha_referencia = datetime(year=C1.year, month=C1.month, day=16)
+        cond3 = (detalle['Date'] < C1 + pd.Timedelta(days=1)) & (detalle['Date'] >= fecha_referencia)
+    else:
+        cond3 = pd.Series([True] * len(detalle))  # Si X1326 no es 15, no aplicar esta condición
+
+    cond4 = detalle['TaxCollectionNo3'] == Y1
+    cond5 = detalle['TurnoverTax'] == L1
+
+    resultado = detalle[cond1 & cond3 & cond4 & cond5]['TaxCollectionAmount3'].sum()
+    resultado_redondeado = round(resultado, 2)
+    print((resultado_redondeado))
+    # return resultado_redondeado
 
 
 def sirtac_900(detalle, resumen, cuit_agente, periodo):
@@ -32,7 +39,7 @@ def sirtac_900(detalle, resumen, cuit_agente, periodo):
     print(txt_900)
 
     for index, row in tqdm(txt_900.iterrows(), desc='Validando SIRTAC (900)'):
-        u, v, w, x, y = calcular_sumifs(row, detalle)
+        calcular_sumifs(row, detalle)
         txt_900.at[index, 'columna_u'] = str(u)
 
         txt_900.at[index, 'columna_v'] = v
