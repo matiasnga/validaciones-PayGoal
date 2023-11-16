@@ -1,7 +1,7 @@
 import file_utils
 import report
 
-periodo = '2023101'
+periodo = '2023111'
 cuit_agente = 'PAYWAY SAU'
 
 detalle_ret = file_utils.open_detalle_csv(cuit_agente, periodo, 'Retenciones')

@@ -4,7 +4,7 @@ import file_utils
 import pandas as pd
 
 
-def calcular_suma_900(row, detalle):
+def calcular_suma_900(ddjj, row, detalle):
     cuit = row['CUIT']
     fecha_liq = row['FechaLiq']
     jurisdiccion = row['Jurisdiccion']
@@ -34,19 +34,21 @@ def calcular_suma_900(row, detalle):
 
 def tax_900(detalle, cuit_agente, periodo):
     ddjj = file_utils.open_900_txt_file(cuit_agente, periodo)
-
+    ddjj['sobretasa'] = pd.NA
+    ddjj['sobretasa'] = ddjj['sobretasa'].astype(str)
     ddjj['tax_condition'] = pd.NA
     ddjj['tax_condition'] = ddjj['tax_condition'].astype(str)
-    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc=f'Validando SIRTAC (900) {cuit_agente} {periodo}'):
-        u, v, w, x, y = calcular_suma_900(row, detalle)
 
-        ddjj.at[index, 'tax_condition'] = u
-        ddjj.at[index, 'suma_reporte'] = v
-        ddjj.at[index, 'diferencia'] = w
-        ddjj.at[index, 'quincena'] = x
-        ddjj.at[index, 'certificado'] = y
+    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0],
+                           desc=f'Validando SIRTAC (900) {cuit_agente} {periodo}'):
+        v, w, x, y, z = calcular_suma_900(ddjj, row, detalle)
 
-    archivo_reporte = f"validaciones/{cuit_agente} {periodo} 900.xlsx"
+        ddjj.at[index, 'tax_condition'] = v
+        ddjj.at[index, 'suma_reporte'] = w
+        ddjj.at[index, 'diferencia'] = x
+        ddjj.at[index, 'quincena'] = y
+        ddjj.at[index, 'certificado'] = z
+
     with pd.ExcelWriter(f'validaciones/{cuit_agente} {periodo} reporte.xlsx', mode='a', engine='openpyxl') as writer:
         # Escribir el primer DataFrame en la primera hoja
         ddjj.to_excel(writer, sheet_name='tax_900', index=False)
@@ -54,6 +56,7 @@ def tax_900(detalle, cuit_agente, periodo):
     fortnight_1_txt = round(ddjj['suma_reporte'].sum(), 2)
     count_1 = ddjj[ddjj['certificado'] != 0]['certificado'].count()
     max_1 = ddjj[ddjj['certificado'] != 0]['certificado'].max()
+    print(ddjj)
     return fortnight_1_txt, count_1, max_1
 
 
@@ -87,7 +90,8 @@ def tax_921(detalle, cuit_agente, periodo):
     ddjj['tax_condition'] = pd.NA
     ddjj['tax_condition'] = ddjj['tax_condition'].astype(str)
 
-    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc=f'Validando SANTA FE (921) {cuit_agente} {periodo}'):
+    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0],
+                           desc=f'Validando SANTA FE (921) {cuit_agente} {periodo}'):
         u, v, w, x, y = calcular_suma_921(row, detalle)
         ddjj.at[index, 'tax_condition'] = u
         ddjj.at[index, 'suma_reporte'] = v
@@ -102,4 +106,5 @@ def tax_921(detalle, cuit_agente, periodo):
     fortnight_1_txt = round(ddjj['suma_reporte'].sum(), 2)
     count_1 = ddjj[ddjj['certificado'] != 0]['certificado'].count()
     max_1 = ddjj[ddjj['certificado'] != 0]['certificado'].max()
+    print(ddjj)
     return fortnight_1_txt, count_1, max_1

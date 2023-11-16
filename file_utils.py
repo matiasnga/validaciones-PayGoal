@@ -4,7 +4,7 @@ import pandas as pd
 def open_detalle_csv(cuit_agente, periodo, tax_type):
     periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
     file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} {tax_type} - detalle.csv"
-    df = pd.read_csv(file, sep=';', decimal=',', low_memory=False).query('VoidDate.isnull() & TotalTaxCollection != 0')
+    df = pd.read_csv(file, sep=';', decimal=',', low_memory=False).query('VoidDate.isnull()')
     df['CompanyId'] = df['CompanyId'].astype('Int64')
     df['ShopId'] = df['ShopId'].astype('Int64')
     df['PaymentNo'] = df['PaymentNo'].astype('Int64')
