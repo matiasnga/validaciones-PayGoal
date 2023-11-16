@@ -1,16 +1,18 @@
 import pandas as pd
 
 
-class DateExtractor:
-    def extract_day(self, date_string):
-        return pd.to_datetime(date_string, format='%d/%m/%Y')
-
-
 def open_detalle_csv(cuit_agente, periodo, tax_type):
     periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
     file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} {tax_type} - detalle.csv"
-    df = pd.read_csv(file, sep=';', decimal=',').query('VoidDate.isnull()')
+    df = pd.read_csv(file, sep=';', decimal=',', low_memory=False).query('VoidDate.isnull() & TotalTaxCollection != 0')
+    df['CompanyId'] = df['CompanyId'].astype('Int64')
+    df['ShopId'] = df['ShopId'].astype('Int64')
+    df['PaymentNo'] = df['PaymentNo'].astype('Int64')
+
     df['Date'] = pd.to_datetime(df['Date']).dt.date
+    if df.iloc[-1].isna().all():
+        # Eliminar la última fila
+        df = df[:-1]
     print(df)
     return pd.DataFrame(df)
 
@@ -19,7 +21,13 @@ def open_resumen_csv(cuit_agente, periodo):
     periodo_archivos = periodo[:4] + "-" + periodo[4:6] + " " + periodo[6:]
     file = f"input/{cuit_agente}/{periodo}/{periodo_archivos} - resumen.csv"
     df = pd.read_csv(file, sep=';', decimal=',')
+    df['TaxId'] = df['TaxId'].astype('Int64')
+
+    if df.iloc[-1].isna().all():
+        # Eliminar la última fila
+        df = df[:-1]
     print(df)
+
     return pd.DataFrame(df)
 
 
@@ -39,10 +47,9 @@ def open_921_txt_file(cuit_agente, periodo):
 
     data = pd.read_csv(file, header=None, sep=',', decimal='.')
     data[7] = data[7].astype(float)
-    print(f"Archivo abierto correctamente: -> {file}")
     data.columns = ['Renglon', 'TipoComprobante', 'LetraComprobante', 'NroLiq', 'CUIT', 'FechaRet', 'Base', 'Alicuota',
                     'Retencion', 'Regimen', 'Jurisdiccion']
-    data['FechaRet'] = pd.to_datetime(data['FechaRet']).dt.date
+    data['FechaRet'] = pd.to_datetime(data['FechaRet'], format='%d/%m/%Y').dt.date
     return pd.DataFrame(data)
 
 
@@ -56,7 +63,7 @@ def open_900_txt_file(cuit_agente, periodo):
                     'Retencion',
                     'TipoRegistro', 'OpeEx', 'Jurisdiccion']
 
-    data['FechaLiq'] = pd.to_datetime(data['FechaLiq']).dt.date
-    data['FechaRet'] = pd.to_datetime(data['FechaRet']).dt.date
+    data['FechaLiq'] = pd.to_datetime(data['FechaLiq'], format='%d/%m/%Y').dt.date
+    data['FechaRet'] = pd.to_datetime(data['FechaRet'], format='%d/%m/%Y').dt.date
 
     return pd.DataFrame(data)

@@ -35,18 +35,22 @@ def calcular_suma_900(row, detalle):
 def tax_900(detalle, cuit_agente, periodo):
     ddjj = file_utils.open_900_txt_file(cuit_agente, periodo)
 
-    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc='Validando SIRTAC (900)'):
+    ddjj['tax_condition'] = pd.NA
+    ddjj['tax_condition'] = ddjj['tax_condition'].astype(str)
+    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc=f'Validando SIRTAC (900) {cuit_agente} {periodo}'):
         u, v, w, x, y = calcular_suma_900(row, detalle)
-        ddjj.at[index, ' '] = ' '
-        ddjj.at[index, 'condicion_fiscal'] = u
+
+        ddjj.at[index, 'tax_condition'] = u
         ddjj.at[index, 'suma_reporte'] = v
         ddjj.at[index, 'diferencia'] = w
         ddjj.at[index, 'quincena'] = x
         ddjj.at[index, 'certificado'] = y
-        ddjj.at[index, 'tipo_impuesto'] = 'RET'
 
     archivo_reporte = f"validaciones/{cuit_agente} {periodo} 900.xlsx"
-    ddjj.to_excel(archivo_reporte, index=False)
+    with pd.ExcelWriter(f'validaciones/{cuit_agente} {periodo} reporte.xlsx', mode='a', engine='openpyxl') as writer:
+        # Escribir el primer DataFrame en la primera hoja
+        ddjj.to_excel(writer, sheet_name='tax_900', index=False)
+
     fortnight_1_txt = round(ddjj['suma_reporte'].sum(), 2)
     count_1 = ddjj[ddjj['certificado'] != 0]['certificado'].count()
     max_1 = ddjj[ddjj['certificado'] != 0]['certificado'].max()
@@ -80,18 +84,21 @@ def calcular_suma_921(row, detalle):
 def tax_921(detalle, cuit_agente, periodo):
     ddjj = file_utils.open_921_txt_file(cuit_agente, periodo)
 
-    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc='Validando SANTA FE (921)'):
+    ddjj['tax_condition'] = pd.NA
+    ddjj['tax_condition'] = ddjj['tax_condition'].astype(str)
+
+    for index, row in tqdm(ddjj.iterrows(), total=ddjj.shape[0], desc=f'Validando SANTA FE (921) {cuit_agente} {periodo}'):
         u, v, w, x, y = calcular_suma_921(row, detalle)
-        ddjj.at[index, ' '] = ' '
         ddjj.at[index, 'tax_condition'] = u
         ddjj.at[index, 'suma_reporte'] = v
         ddjj.at[index, 'diferencia'] = w
         ddjj.at[index, 'quincena'] = x
         ddjj.at[index, 'certificado'] = y
-        ddjj.at[index, 'tipo_impuesto'] = 'RET'
 
-    archivo_reporte = f"validaciones/{cuit_agente} {periodo} 921.xlsx"
-    ddjj.to_excel(archivo_reporte, index=False)
+    with pd.ExcelWriter(f'validaciones/{cuit_agente} {periodo} reporte.xlsx', mode='a', engine='openpyxl') as writer:
+        # Escribir el primer DataFrame en la primera hoja
+        ddjj.to_excel(writer, sheet_name='tax_921', index=False)
+
     fortnight_1_txt = round(ddjj['suma_reporte'].sum(), 2)
     count_1 = ddjj[ddjj['certificado'] != 0]['certificado'].count()
     max_1 = ddjj[ddjj['certificado'] != 0]['certificado'].max()
