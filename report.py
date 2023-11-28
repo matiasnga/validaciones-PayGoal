@@ -1,5 +1,12 @@
 import pandas as pd
-import validaciones
+import afip_767
+import afip_217
+import agip_901
+import corrientes_905
+import file_utils
+import santa_fe_921
+import sirtac_900
+import tucuman_924
 
 pd.set_option('display.max_columns', 10)
 pd.set_option('display.expand_frame_repr', False)
@@ -12,20 +19,36 @@ def calcular_total_detalle(detalle_ret, tax_id, id_mapping):
     return round(detalle_ret[detalle_ret[columna_tax] == tax_id][columna_amount].sum(), 2)
 
 
-def obtener_datos_tax(detalle_ret, cuit_agente, periodo, tax_id):
-    tax_id_int = int(tax_id)  # Convertir tax_id a entero para manejar correctamente las claves como enteros
-    clave_funcion = f'tax_{tax_id_int}'
+def obtener_datos_tax(detalle_ret, cuit_agente, periodo, tax_id, tax_type):
+    tax_id = int(tax_id)  # Convertir tax_id a entero para manejar correctamente las claves como enteros
+    if tax_type == 'RET':
+        if tax_id == 924:
+            return tucuman_924.tax_924(detalle_ret, cuit_agente, periodo)
+        if tax_id == 901:
+            return agip_901.procesar_tax901(detalle_ret, cuit_agente, periodo)
+        if tax_id == 900:
+            return sirtac_900.tax_900(detalle_ret, cuit_agente, periodo)
+        #
+        # if tax_id == 217:
+        #     return afip_217.procesar_tax_217(detalle_ret, cuit_agente, periodo)
+        if tax_id == 921:
+            return santa_fe_921.tax_921(detalle_ret, cuit_agente, periodo)
+        if tax_id == 905:
+            return corrientes_905.tax_905(detalle_ret, cuit_agente, periodo)
+        if tax_id == 767:
+            return afip_767.procesar_tax_767(detalle_ret, cuit_agente, periodo)
+        else:
+            return 0, 0, 0, 0, 0, 0
 
-    # Verificar si la clave existe en el diccionario y si es uno de los IDs específicos que necesitamos
-    if clave_funcion in validaciones.__dict__ and tax_id_int in [900, 921]:
-        return validaciones.__dict__[clave_funcion](detalle_ret, cuit_agente, periodo)
-
-    return 0, 0, 0
+    else:
+        return 0, 0, 0, 0, 0, 0
 
 
 def crear_fila(row, detalle_ret, detalle_per, cuit_agente, periodo, id_mapping):
     tax_id = row['TaxId']
-    txt_1, count_1, max_1 = obtener_datos_tax(detalle_ret, cuit_agente, periodo, tax_id)
+    txt_1, count_1, max_1, txt_2, count_2, max_2 = obtener_datos_tax(detalle_ret, cuit_agente, periodo, tax_id,
+                                                                     row['TaxCollectionType'])
+
     if row['TaxCollectionType'] == 'RET':
         total_detalle = calcular_total_detalle(detalle_ret, tax_id, id_mapping)
     else:
@@ -39,13 +62,13 @@ def crear_fila(row, detalle_ret, detalle_per, cuit_agente, periodo, id_mapping):
         'total_detalle': total_detalle,
         'diff': row['Total'] - total_detalle,
         '1_fortnight_txt': txt_1,
-        'diff_1_txt_vs_detalle': total_detalle - txt_1,
-        '2_fortnight_txt': 0,
-        'diff_2_txt_vs_detalle': 0,
+        'diff_1_txt_vs_detalle': row['1stFortnight'] - txt_1,
+        '2_fortnight_txt': txt_2,
+        'diff_2_txt_vs_detalle': row['2stFortnight'] - txt_2,
         '1_count': count_1,
         '1_max': max_1,
-        '2_count': 0,
-        '2_max': 0
+        '2_count': count_2,
+        '2_max': max_2
     }
 
 
@@ -75,6 +98,5 @@ def validacion(detalle_ret, detalle_per, resumen, cuit_agente, periodo):
         validaciones_result.to_excel(writer, sheet_name='Validaciones', index=False)
 
         resumen.to_excel(writer, sheet_name='Resumen', index=False)
-
 
     print(validaciones_result)
